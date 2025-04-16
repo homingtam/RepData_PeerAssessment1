@@ -1,0 +1,87 @@
+---
+title: "assignment_1"
+author: "MingT"
+date: "2025-04-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##### Loading and preprocessing the data
+
+```{r echo = TRUE}
+library(dplyr)
+data <- read.csv("activity.csv", header = TRUE)
+
+```
+
+##### The mean of total number of steps taken per day
+
+```{r echo = TRUE}
+group_by_date_data <- data[,1:2] %>% group_by(date) %>% summarize(total = sum(steps, na.rm = TRUE))
+mean(group_by_date_data$total, na.rm = TRUE)
+median(group_by_date_data$total, na.rm = TRUE)
+```
+##### Time series plot
+
+```{r echo - TRUE}
+group_by_date_interval <- data[,c(1,3)] %>% group_by(interval) %>% summarize(total = mean(steps, na.rm = TRUE))
+
+plot(group_by_date_interval$interval, group_by_date_interval$total, type = "l")
+max_value <- max(group_by_date_interval$total)
+subset(group_by_date_interval$interval, group_by_date_interval$total == max_value)
+```
+##### Imputing missing values
+
+```{r}
+sum(is.na(data['steps']))
+## fed by mean
+mean_value <- mean(group_by_date_interval$total)
+data_new <- data
+data_new$steps[is.na(data_new['steps'])] <- max_value
+data_new
+
+group_by_date_data_new <- data_new[,1:2] %>% group_by(date) %>% summarize(total = sum(steps, na.rm = TRUE))
+hist(group_by_date_data_new$total)
+mean(group_by_date_data_new$total)
+median(group_by_date_data_new$total)
+
+# diff in mean
+mean(group_by_date_data_new$total) - mean(group_by_date_data$total)
+
+
+# diff in median
+median(group_by_date_data_new$total) - median(group_by_date_data$total)
+
+```
+
+##### Are there differences in activity patterns between weekdays and weekends?
+```{r}
+data_new_2 <- data_new
+data_new_2$date <- as.Date(data_new_2$date)
+
+data_new_2$weekdays <- weekdays(data_new_2$date)
+
+
+data_new_2[data_new_2$weekdays == 'Sunday' | data_new_2$weekdays == 'Saturday',]$weekdays <- 'weekends' 
+data_new_2[data_new_2$weekdays != 'weekends',]$weekdays <- 'weekdays' 
+
+nrow(data_new_2[data_new_2$weekdays == 'weekdays',])
+
+data_new_2_weekends <- data_new_2[data_new_2$weekdays == "weekends",] 
+data_new_2_weekdays <- data_new_2[data_new_2$weekdays == "weekdays",] 
+
+
+data_new_2_weekends_interval <- data_new_2_weekends[,c(1,3)] %>% group_by(interval) %>% summarize(total = mean(steps, na.rm = TRUE))
+plot(data_new_2_weekends_interval$interval, data_new_2_weekends_interval$total, type = "l")
+
+data_new_2_weekdays_interval <- data_new_2_weekdays[,c(1,3)] %>% group_by(interval) %>% summarize(total = mean(steps, na.rm = TRUE))
+plot(data_new_2_weekdays_interval$interval, data_new_2_weekdays_interval$total, type = "l")
+```
+
+
+
+
+
